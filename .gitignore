@@ -1,0 +1,9 @@
+*.exe
+*.pkg
+*.dmg
+*.zip
+.env
+.env.*
+node_modules/
+.DS_Store
+Tests/.build/
