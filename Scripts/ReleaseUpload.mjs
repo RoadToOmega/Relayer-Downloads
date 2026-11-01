@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { createInterface } from 'node:readline/promises';
+import { macInstallerPath } from './MacInstallerPath.mjs';
 
 export const config = JSON.parse(await readFile(new URL('./ReleaseUpload.config.json', import.meta.url), 'utf8'));
 export const repo = `${config.owner}/${config.repository}`;
@@ -20,6 +21,7 @@ const versionPattern = /^\d+\.\d+\.\d+(?:-(?:rc|beta)\.\d+)?(?:-r\d+)?$/;
 const hashBytes = bytes => createHash('sha256').update(bytes).digest('hex');
 const jsonBytes = value => Buffer.from(JSON.stringify(value, null, 2) + '\n');
 export const latestLinks = () => Object.fromEntries(Object.entries(config.platforms).map(([p, v]) => [p, `https://github.com/${repo}/releases/latest/download/${v.asset}`]));
+export const versionedAssetName = (platform, version) => `Relayer-${version}-${platform === 'mac' ? 'macOS' : 'Windows'}-Setup${config.platforms[platform].extension}`;
 
 async function removeScratch(dir) {
     const absolute = resolve(dir);
@@ -118,12 +120,13 @@ function matches(asset, size, sha256) {
     return asset?.state === 'uploaded' && asset.size === size && asset.digest === `sha256:${sha256}`;
 }
 export function validateManifest(manifest) {
-    if (manifest.schema !== 2 || manifest.product !== 'Relayer' || manifest.repository !== repo || !manifest.platforms || !('baseReleaseId' in manifest) || (manifest.baseReleaseId !== null && !Number.isSafeInteger(manifest.baseReleaseId))) throw new Error('Invalid release manifest.');
+    if (![2, 3].includes(manifest.schema) || manifest.product !== 'Relayer' || manifest.repository !== repo || !manifest.platforms || !('baseReleaseId' in manifest) || (manifest.baseReleaseId !== null && !Number.isSafeInteger(manifest.baseReleaseId))) throw new Error('Invalid release manifest.');
     const platforms = Object.keys(manifest.platforms);
     if (!platforms.length || platforms.some(p => !config.platforms[p])) throw new Error('Invalid platform records.');
     for (const platform of platforms) {
         const p = manifest.platforms[platform];
         if (!p || !versionPattern.test(p.version) || p.asset !== config.platforms[platform].asset || !Number.isSafeInteger(p.size) || p.size <= 0 || p.size >= 2 ** 31 || !/^[a-f0-9]{64}$/.test(p.sha256) || typeof p.originalFilename !== 'string' || /[\r\n/\\]/.test(p.originalFilename)) throw new Error(`Invalid ${platform} manifest record.`);
+        if (manifest.schema === 3 && p.versionedAsset !== versionedAssetName(platform, p.version)) throw new Error(`Invalid ${platform} versioned filename.`);
     }
     return manifest;
 }
@@ -138,10 +141,12 @@ async function loadManifest(api, release, dir) {
 }
 function expectedAssets(manifest) {
     const metadata = jsonBytes(manifest);
-    const sums = Buffer.from(Object.values(manifest.platforms).map(p => `${p.sha256}  ${p.asset}\n`).join(''));
+    const installers = Object.entries(manifest.platforms).flatMap(([platform, r]) =>
+        [r.asset, ...(manifest.schema === 3 ? [r.versionedAsset] : [])].map(name => ({ name, size: r.size, sha256: r.sha256, platform })));
+    const sums = Buffer.from(installers.map(p => `${p.sha256}  ${p.name}\n`).join(''));
     return [
         { name: manifestName, size: metadata.length, sha256: hashBytes(metadata), bytes: metadata },
-        ...Object.entries(manifest.platforms).map(([platform, r]) => ({ name: r.asset, size: r.size, sha256: r.sha256, platform })),
+        ...installers,
         { name: sumsName, size: sums.length, sha256: hashBytes(sums), bytes: sums }
     ];
 }
@@ -158,9 +163,9 @@ export async function uploadInstaller(api, platform, installer, tag, notes = '')
         const platforms = {};
         for (const p of Object.keys(config.platforms)) {
             const record = p === platform ? installer.record : base?.platforms[p];
-            if (record) platforms[p] = record;
+            if (record) platforms[p] = { ...record, versionedAsset: versionedAssetName(p, record.version) };
         }
-        const manifest = validateManifest({ schema: 2, product: 'Relayer', repository: repo, baseReleaseId: latest?.id ?? null, platforms });
+        const manifest = validateManifest({ schema: 3, product: 'Relayer', repository: repo, baseReleaseId: latest?.id ?? null, platforms });
         const expected = expectedAssets(manifest);
         const assets = release ? await api('GET', `${root}/releases/${release.id}/assets?per_page=100`) : [];
         if (assets.some(a => !expected.some(e => e.name === a.name))) throw new Error('Unexpected draft assets. Review the draft manually.');
@@ -170,7 +175,7 @@ export async function uploadInstaller(api, platform, installer, tag, notes = '')
         }
         const files = { [platform]: installer.path };
         for (const [p, record] of Object.entries(platforms)) {
-            if (p === platform || assets.some(a => matches(a, record.size, record.sha256) && a.name === record.asset)) continue;
+            if (p === platform || expected.filter(e => e.platform === p).every(e => assets.some(a => a.name === e.name && matches(a, e.size, e.sha256)))) continue;
             const source = baseAssets.find(a => a.name === record.asset);
             if (!matches(source, record.size, record.sha256)) throw new Error(`Current ${p} installer differs from its manifest.`);
             files[p] = join(dir, record.asset);
@@ -236,7 +241,8 @@ export async function main(argv) {
         const rl = createInterface({ input: process.stdin, output: process.stdout });
         try {
             console.log(`Relayer ${platform} uploader — ${repo}\nThe other live platform will be retained automatically.`);
-            const file = (await rl.question('Paste or drag the installer path here, then press Enter: ')).trim().replace(/^"(.*)"$/, '$1');
+            const input = await rl.question('Paste or drag the installer path here, then press Enter: ');
+            const file = platform === 'mac' ? macInstallerPath(input) : input.trim().replace(/^"(.*)"$/, '$1');
             let guessed = '';
             try { guessed = inferVersion(file); } catch {}
             const version = (await rl.question(`Version${guessed ? ` [${guessed}]` : ''}: `)).trim() || guessed;

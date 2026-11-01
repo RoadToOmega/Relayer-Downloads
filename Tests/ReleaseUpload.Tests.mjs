@@ -89,7 +89,7 @@ test('Windows first, add Mac, update Windows, then update Mac; exact other-platf
         const asset = state.latest.assets.find(a => a.name === config.platforms[platform].asset);
         assert.equal(asset.digest, `sha256:${manifest.platforms[platform].sha256}`);
     }
-    assert.equal(state.latest.assets.length, 4);
+    assert.equal(state.latest.assets.length, 6);
     assert.equal(sha(await readFile(f.windows)), f.w.record.sha256);
 });
 test('interrupted upload cannot publish; retry resumes and published versions cannot be overwritten', async t => {
@@ -99,7 +99,7 @@ test('interrupted upload cannot publish; retry resumes and published versions ca
     await assert.rejects(publishDraft(api, 'retry'), /Incomplete/);
     await uploadInstaller(api, 'windows', f.w, 'retry');
     assert.equal(state.releases.length, 1);
-    assert.equal(state.releases[0].assets.length, 3);
+    assert.equal(state.releases[0].assets.length, 4);
     await publishDraft(api, 'retry');
     await assert.rejects(uploadInstaller(api, 'windows', f.w, 'retry'), /Already published/);
     assert.equal(state.calls.some(c => c.method === 'DELETE'), false);
@@ -111,7 +111,7 @@ test('stale drafts cannot restore an old other-platform build', async t => {
     await uploadInstaller(api, 'windows', await inspectInstaller('windows', f.windows, '0.8.65'), 'win-draft');
     await publishDraft(api, 'win-draft');
     await assert.rejects(publishDraft(api, 'mac-draft'), /Another release/);
-    await assert.rejects(uploadInstaller(api, 'mac', f.m, 'mac-draft'), /stale/);
+    await assert.rejects(uploadInstaller(api, 'mac', f.m, 'mac-draft'), /stale|Unexpected draft assets/);
     assert.equal(state.latest.tag_name, 'win-draft');
 });
 test('damaged carried installer and mismatched draft assets are rejected', async t => {
@@ -128,4 +128,30 @@ test('prereleases do not move the live download', async t => {
     await uploadInstaller(api, 'windows', rc, 'windows-v0.9.0-rc.1');
     const result = await publishDraft(api, 'windows-v0.9.0-rc.1');
     assert.equal(result.prerelease, true); assert.equal(state.latest, null);
+});
+
+test('legacy migration and interrupted carried versioned asset resume', async t => {
+    const f = await fixtures(t); const { api, state } = githubMock();
+    await uploadInstaller(api, 'windows', f.w, 'initial'); await publishDraft(api, 'initial');
+    const old = state.latest;
+    const meta = old.assets.find(a => a.name === 'release-manifest.json');
+    const manifest = JSON.parse(state.bytes.get(meta.id));
+    manifest.schema = 2;
+    delete manifest.platforms.windows.versionedAsset;
+    const bytes = Buffer.from(JSON.stringify(manifest, null, 2) + '\n');
+    state.bytes.set(meta.id, bytes); meta.size = bytes.length; meta.digest = `sha256:${sha(bytes)}`;
+    old.assets = old.assets.filter(a => a.name !== 'Relayer-0.8.64-r2-Windows-Setup.exe');
+    state.failUploadName = 'Relayer-0.8.64-r2-Windows-Setup.exe';
+    await assert.rejects(uploadInstaller(api, 'mac', f.m, 'migrate'), /interrupted/);
+    await assert.rejects(publishDraft(api, 'migrate'), /Incomplete/);
+    await uploadInstaller(api, 'mac', f.m, 'migrate');
+    await publishDraft(api, 'migrate');
+    for (const [stable, versioned] of [
+        ['Relayer-Windows-Setup.exe', 'Relayer-0.8.64-r2-Windows-Setup.exe'],
+        ['Relayer-macOS-Setup.pkg', 'Relayer-0.9.0-r1-macOS-Setup.pkg']
+    ]) {
+        const a = state.latest.assets.find(a => a.name === stable);
+        const b = state.latest.assets.find(a => a.name === versioned);
+        assert.deepEqual(state.bytes.get(a.id), state.bytes.get(b.id));
+    }
 });

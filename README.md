@@ -31,7 +31,7 @@ After a stable release is published, use direct download links on the website:
 - Windows: https://github.com/RoadToOmega/Relayer-Downloads/releases/latest/download/Relayer-Windows-Setup.exe
 - Mac (after its first published upload): https://github.com/RoadToOmega/Relayer-Downloads/releases/latest/download/Relayer-macOS-Setup.pkg
 
-These links keep working across updates without changing the website. Use normal links rather than a cross-origin JavaScript fetch/rename flow. Download names stay fixed; the original filename, version, size and SHA256 are recorded in release-manifest.json. Your local installer is not renamed.
+These links keep working across updates without changing the website. Use normal links rather than a cross-origin JavaScript fetch/rename flow. The uploader now adds versioned files such as Relayer-0.8.67-r2-Windows-Setup.exe and Relayer-0.8.66-r1-macOS-Setup.pkg, plus the fixed-name compatibility copies. The website uses the LatestInstallerUrl.mjs resolver to find the versioned file in the latest stable release; an unavailable/rate-limited lookup falls back to the fixed name. Each platform keeps its own version. The manifest records both filenames, version, size and SHA256. Your local installer is not renamed.
 
 Drafts are not public downloads. Prerelease versions such as `0.9.0-beta.1` do not replace the stable latest download.
 
@@ -48,3 +48,8 @@ node --test Tests/ReleaseUpload.Tests.mjs
 An identical interrupted upload can be retried to resume its draft. Published releases cannot be overwritten by this tool; use a new version/revision. For a fresh draft with the same version, pass a unique `--release` tag to the upload command.
 
 Checks verify file type, size and checksums and preserve the other platform. They do not replace installer testing, signing, notarization or release approval. Publish through this uploader to run its completeness and stale-draft checks.
+
+## Mac launcher
+
+On Mac, pull the latest repository and double-click Scripts/Upload-Mac-Installer.command. If needed, make that launcher executable with chmod +x Scripts/Upload-Mac-Installer.command. Both platforms must use this updated uploader for schema-3 releases. Old published schema-2 releases are read automatically; unfinished old drafts should use a new release tag.
+
