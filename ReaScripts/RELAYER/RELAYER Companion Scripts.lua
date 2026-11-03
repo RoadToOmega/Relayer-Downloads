@@ -8,7 +8,7 @@
 --   Tested with RELAYER 0.8.78 VST3 and REAPER 7.55/x64 on Windows.
 --   Later builds must retain compatible state and command protocols.
 --   macOS/Linux have not been validated. See README.md for workflow limits.
---   Proprietary: supplied for use with RELAYER only; see LICENSE.txt.
+--   Proprietary: supplied for use with RELAYER only; see LICENSE.md.
 -- @changelog
 --   Initial ReaPack release of the verified 0.5.1 helper bundle.
 --   Includes improved Library instructions and import timeout feedback.
@@ -25,4 +25,4 @@
 --   README.md
 --   EXPORT.md
 --   MEDIA-EXPLORER.md
---   LICENSE.txt
+--   LICENSE.md
