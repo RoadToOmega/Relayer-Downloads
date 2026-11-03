@@ -27,13 +27,15 @@ local function escape(value)
   return (value:gsub('&','&amp;'):gsub('"','&quot;'):gsub('<','&lt;'):gsub('>','&gt;')
     :gsub('\r','&#13;'):gsub('\n','&#10;'):gsub('\t','&#9;'))
 end
-function M.parse(filename)
+function M.parse(filename,checkpoint)
   local input=assert(io.open(filename,'rb'),'Cannot open database: '..filename)
   local size=input:seek('end');input:seek('set')
   if size>M.maxBytes then input:close();error('Database exceeds 64 MiB limit') end
   local entries,seen={},{};local current;local skipped,duplicates=0,0
   local ok,err=pcall(function()
+    local lines=0
     for line in input:lines() do
+      lines=lines+1;if checkpoint and lines%256==0 then checkpoint() end
       line=line:gsub('^\239\187\191',''):gsub('\r$','')
       assert(#line<=1024*1024,'Oversized database line')
       local tag=line:match('^(%S+)')
@@ -57,17 +59,25 @@ function M.parse(filename)
     end
   end)
   input:close();assert(ok,err)
-  for _,entry in ipairs(entries) do
+  local cleaned=0
+  for index,entry in ipairs(entries) do
+    if checkpoint and index%256==0 then checkpoint() end
     entry.metadata=table.concat(entry.metadata,' | ');entry.seen=nil
+    -- XML 1.0 cannot represent these embedded metadata separators. Keep words
+    -- separated without touching source files or silently changing file paths.
+    local count
+    entry.metadata,count=entry.metadata:gsub('[%z\1-\8\11\12\14-\31]',' ')
+    cleaned=cleaned+count
     assert(#entry.metadata<=65536,'A WAV has more than 64 KiB of database metadata')
   end
-  return entries,skipped,duplicates
+  return entries,skipped,duplicates,cleaned
 end
-function M.xml(source,name,entries)
+function M.xml(source,name,entries,checkpoint)
   assert(absolute(source) and source:lower():match('%.reaperfilelist$'),'Invalid database source')
   assert(name~='' and #name<=1024,'Invalid database name')
   local out={'<?xml version="1.0" encoding="UTF-8"?>\n<RelayerMediaDatabase version="1" source="'..escape(source)..'" name="'..escape(name)..'">'}
-  for _,entry in ipairs(entries) do
+  for index,entry in ipairs(entries) do
+    if checkpoint and index%256==0 then checkpoint() end
     out[#out+1]='<Wav path="'..escape(entry.path)..'" metadata="'..escape(entry.metadata)..'"/>'
   end
   out[#out+1]='</RelayerMediaDatabase>'
