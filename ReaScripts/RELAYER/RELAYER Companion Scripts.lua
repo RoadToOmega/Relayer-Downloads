@@ -1,5 +1,5 @@
 -- @description RELAYER Companion Scripts
--- @version 0.5.1
+-- @version 0.5.2
 -- @author Bight Audio
 -- @metapackage
 -- @link Website https://www.bightaudio.com/
@@ -10,12 +10,11 @@
 --   macOS/Linux have not been validated. See README.md for workflow limits.
 --   Proprietary: supplied for use with RELAYER only; see LICENSE.md.
 -- @changelog
---   Initial ReaPack release of the verified 0.5.1 helper bundle.
---   Includes improved Library instructions and import timeout feedback.
+--   Remove the legacy Load selected WAV into layer 1 action.
+--   Use Load selected WAV into active layer instead.
 -- @provides
 --   [main] RELAYER - Load selected WAVs into layers.lua
 --   [main] RELAYER - Load selected WAV into active layer.lua
---   [main] RELAYER - Load selected WAV into layer 1.lua
 --   [main] RELAYER - Export variations to new track.lua
 --   [main] RELAYER - Import Media Explorer databases.lua
 --   [nomain] RelayerBridge.lua

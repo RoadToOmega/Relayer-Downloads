@@ -60,7 +60,7 @@ Install RELAYER separately, then in REAPER choose **Extensions > ReaPack > Impor
 
 https://raw.githubusercontent.com/RoadToOmega/Relayer-Downloads/main/index.xml
 
-Choose **Browse packages**, search for **RELAYER Companion Scripts**, install and apply. All five actions and four supporting modules install together. Supporting modules do not appear in the Action List. Use **Synchronize packages** to obtain later updates.
+Choose **Browse packages**, search for **RELAYER Companion Scripts**, install and apply. All four actions and four supporting modules install together. Supporting modules do not appear in the Action List. Use **Synchronize packages** to obtain later updates.
 
 Scripts are proprietary and supplied for use with RELAYER only. See [the script licence](ReaScripts/RELAYER/LICENSE.md) and [usage/compatibility notes](ReaScripts/RELAYER/README.md). Windows REAPER 7.55 and RELAYER 0.8.78 VST3 were tested; other platforms remain unvalidated.
 
@@ -68,7 +68,7 @@ If migrating from a manually extracted ZIP, ReaPack installs into its own manage
 
 ## Release companion updates
 
-1. Copy an approved helper bundle into `ReaScripts/RELAYER`, retaining the package descriptor and LICENSE.md. Keep every Lua file together.
+1. Copy an approved helper bundle into `ReaScripts/RELAYER`, retaining the package descriptor and LICENSE.md. Keep the supported Lua files together. Do not restore the retired `RELAYER - Load selected WAV into layer 1.lua` alias.
 2. Increment `@version` in `RELAYER Companion Scripts.lua` and add release notes. Helper versions are separate from plugin versions; never overwrite a published version.
 3. Commit and push. The **ReaPack** workflow checks Lua syntax and package metadata and uploads a candidate index artifact.
 4. Test the candidate with ReaPack in a disposable REAPER configuration, including fresh install, update and removal.

@@ -1,10 +1,10 @@
-# RELAYER REAPER helpers 0.5.1
+# RELAYER REAPER helpers 0.5.2
 
 New: [Import/update Media Explorer databases](MEDIA-EXPLORER.md), retaining database names, curated WAV selections and searchable metadata. Verified against RELAYER 0.8.78; later compatible builds are supported as described below.
 
 New: [Export variations to a new track](EXPORT.md) renders a chosen count from the current patch.
 
-Action: **RELAYER - Load selected WAVs into layers.lua** loads 1-4 WAVs in order. The original single-WAV action filename remains compatible with existing shortcuts and now loads one WAV into the active layer.
+Action: **RELAYER - Load selected WAVs into layers.lua** loads 1-4 WAVs in order. Use the active-layer action to load one WAV into the selected layer.
 
 ## Install and use
 
@@ -21,7 +21,7 @@ The original WAV is used: item trimming, fades, take FX, pitch and stretch are n
 
 ## Load one WAV into the active layer
 
-Use **RELAYER - Load selected WAV into active layer.lua**. The old **RELAYER - Load selected WAV into layer 1.lua** shortcut runs this same active-layer action.
+Use **RELAYER - Load selected WAV into active layer.lua**. Helpers 0.5.2 remove the misleading legacy layer-1 alias. Reassign any shortcut using that alias to the active-layer action; ReaPack removes the retired file when updating.
 
 1. Install RELAYER 0.8.78 or a later compatible build, then reload the plugin instance.
 2. Click the desired layer tab in RELAYER, or use its 1–4 keyboard shortcuts.
