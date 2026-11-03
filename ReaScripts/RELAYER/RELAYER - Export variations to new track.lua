@@ -3,6 +3,7 @@
 local _,filename=reaper.get_action_context()
 local loaded,export=pcall(dofile,assert(filename:match('^(.*[/\\])'))..'RelayerExport.lua')
 if not loaded then reaper.MB(tostring(export),'RELAYER export',0);return end
+local function run(text)
 local project,track,fx,guid,original,job,id,options,position
 local function sourceExists()
   local found=false;local i=0
@@ -29,9 +30,6 @@ local ok,err=pcall(function()
   assert(reaper.GetPlayStateEx(project)==0,'Stop transport before exporting')
   assert(reaper.CountSelectedTracks(project)==1,'Select exactly one track containing RELAYER')
   track=reaper.GetSelectedTrack(project,0);fx,original=export.find(track);guid=reaper.TrackFX_GetFXGUID(track,fx)
-  local accepted,text=reaper.GetUserInputs('RELAYER - Export variations',4,
-    'Variations (1-50),Play duration (seconds),FX tail (seconds),Gap between items (seconds)','10,2,2,0.25')
-  if not accepted then return end
   options=export.options(text);position=reaper.GetCursorPositionEx(project)
   id=reaper.genGuid():gsub('[^%x]',''):lower()
   assert(#id==32,'Could not create export job ID')
@@ -42,7 +40,7 @@ end)
 if not ok then reaper.MB(tostring(err),'RELAYER export',0);return end
 if not started then return end
 local began=reaper.time_precise()
-gfx.init('RELAYER export',440,110)
+gfx.init('RELAYER - Rendering variations',560,180)
 reaper.atexit(function()
   gfx.quit()
   if not finished then pcall(send,'cancel') end
@@ -50,7 +48,7 @@ end)
 local function update()
   local success,message=pcall(function()
     local key=gfx.getchar()
-    if key<0 or key==27 or (gfx.mouse_cap&1~=0 and gfx.mouse_y>=65) then
+    if key<0 or key==27 or (gfx.mouse_cap&1~=0 and gfx.mouse_x>=16 and gfx.mouse_x<=146 and gfx.mouse_y>=125 and gfx.mouse_y<=157) then
       pcall(send,'cancel');finished=true;gfx.quit();return
     end
     assert(reaper.EnumProjects(-1,'')==project and sourceExists(),'Source project/instance changed; no items imported. Completed WAVs remain in:\n'..job)
@@ -61,10 +59,12 @@ local function update()
       finished=true;gfx.quit();return
     end
     gfx.set(0.08,0.10,0.12);gfx.rect(0,0,gfx.w,gfx.h,1)
-    gfx.set(0.8,0.9,0.93);gfx.x=16;gfx.y=16
+    gfx.setfont(1,'Arial',20);gfx.set(0.8,0.9,0.93);gfx.x=16;gfx.y=20
     gfx.drawstr(('Rendering %d variations...  %.0f s'):format(options.count,reaper.time_precise()-began))
-    gfx.x=16;gfx.y=40;gfx.drawstr('Current patch + RELAYER output FX. Keep this project open.')
-    gfx.x=16;gfx.y=76;gfx.drawstr('Cancel (Esc)');gfx.update()
+    gfx.setfont(1,'Arial',14);gfx.x=16;gfx.y=60;gfx.drawstr('Current patch + RELAYER output FX. Keep this project open.')
+    gfx.x=16;gfx.y=88;gfx.drawstr('Completed files will appear together on a new track.')
+    gfx.set(.18,.21,.23);gfx.rect(16,125,130,32,1)
+    gfx.set(.9,.92,.94);gfx.x=28;gfx.y=133;gfx.drawstr('Cancel (Esc)');gfx.update()
   end)
   if not success then
     pcall(send,'cancel');finished=true;gfx.quit()
@@ -72,3 +72,6 @@ local function update()
   elseif not finished then reaper.defer(update) end
 end
 update()
+
+end
+export.showSetup(run)

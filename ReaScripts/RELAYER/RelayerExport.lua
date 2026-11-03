@@ -104,4 +104,66 @@ function M.import(project,files,position,gap)
   reaper.TrackList_AdjustWindows(false);reaper.UpdateArrange()
   return track
 end
+-- Non-blocking setup window; numeric validation uses the export protocol's limits.
+function M.showSetup(done)
+  local values={'10','2','2','0.25'}
+  local labels={'Variations','Sound length','FX tail','Space between items'}
+  local hints={'1–50 files','0.05–60 seconds per variation','0–30 seconds for echoes and reverb','0–30 seconds on the REAPER timeline'}
+  local focus,replace,wasDown=1,true,false
+  local closed=false
+  gfx.init('RELAYER - Export variations',600,460)
+  local function close() closed=true;gfx.quit() end
+  local function text(s,x,y,size,r,g,b)
+    gfx.setfont(1,'Arial',size);gfx.set(r or .9,g or .92,b or .94);gfx.x=x;gfx.y=y;gfx.drawstr(s)
+  end
+  local function frame()
+    local key=gfx.getchar()
+    if key<0 or key==27 then close();return end
+    if key==9 then focus=focus%4+1;replace=true
+    elseif key==8 then values[focus]=replace and '' or values[focus]:sub(1,-2);replace=false
+    elseif key>=32 and key<=126 then
+      local c=string.char(key)
+      if c:match('[%d%.]') and (#values[focus]<10 or replace) then
+        values[focus]=replace and c or values[focus]..c;replace=false
+      end
+    end
+    local ok,options=pcall(M.options,table.concat(values,','))
+    local down=(gfx.mouse_cap&1)==1;local click=down and not wasDown;wasDown=down
+    local w,h=gfx.w,gfx.h
+    gfx.set(.08,.09,.10);gfx.rect(0,0,w,h,1)
+    if w<560 or h<460 then
+      text('Enlarge this window to continue. Esc closes.',20,24,16)
+      gfx.update();reaper.defer(frame);return
+    end
+    text('Export variations',24,22,24)
+    text('Render your current patch to a new track at the edit cursor.',24,58,14,.6,.65,.69)
+    for i=1,4 do
+      local y=100+(i-1)*61
+      text(labels[i],24,y,17)
+      text(hints[i],24,y+24,13,.6,.65,.69)
+      local x=w-154
+      if click and gfx.mouse_x>=x and gfx.mouse_x<w-24 and gfx.mouse_y>=y and gfx.mouse_y<y+40 then focus=i;replace=true end
+      gfx.set(focus==i and .25 or .16,.23,.25);gfx.rect(x,y,130,40,1)
+      text(values[i]..(focus==i and ' |' or ''),x+12,y+10,18)
+    end
+    if ok then
+      local seconds=options.count*(options.duration+options.tail)+(options.count-1)*options.gap
+      text(string.format('%d WAV files  ·  %.2f seconds on the timeline',options.count,seconds),24,352,15)
+    else
+      text(tostring(options):gsub('^.-:%d+: ',''),24,352,15,1,.6,.5)
+    end
+    text('Includes RELAYER FX. Audio is saved in your project folder.',24,379,13,.6,.65,.69)
+    local function button(label,x,width,active)
+      gfx.set(active and .77 or .18,active and .92 or .21,active and .33 or .23);gfx.rect(x,h-52,width,32,1)
+      text(label,x+12,h-45,15,active and .08 or .8,active and .1 or .82,active and .08 or .84)
+      return click and gfx.mouse_x>=x and gfx.mouse_x<x+width and gfx.mouse_y>=h-52 and gfx.mouse_y<h-20
+    end
+    if button('Cancel',24,90,false) then close();return end
+    local submit=button('Export variations',w-196,172,ok)
+    if ok and (submit or key==13) then local result=table.concat(values,',');close();done(result);return end
+    gfx.update();if not closed then reaper.defer(frame) end
+  end
+  frame()
+end
+
 return M

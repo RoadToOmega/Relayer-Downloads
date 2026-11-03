@@ -1,5 +1,5 @@
 -- @description RELAYER Companion Scripts
--- @version 0.6.0
+-- @version 0.6.1
 -- @author Bight Audio
 -- @metapackage
 -- @link Website https://www.bightaudio.com/
@@ -10,8 +10,8 @@
 --   macOS/Linux have not been validated. See README.md for workflow limits.
 --   Proprietary: supplied for use with RELAYER only; see LICENSE.md.
 -- @changelog
---   Select databases by name, with progress, cancellation and import results.
---   Handle invisible metadata characters found in large Boom databases.
+--   Clearer export setup, inline validation and live timeline summary.
+--   Improved rendering status and bounded Cancel button.
 -- @provides
 --   [main] RELAYER - Load selected WAVs into layers.lua
 --   [main] RELAYER - Load selected WAV into active layer.lua
