@@ -1,5 +1,5 @@
 -- @description RELAYER Companion Scripts
--- @version 0.6.2
+-- @version 0.6.3
 -- @author Bight Audio
 -- @metapackage
 -- @link Website https://www.bightaudio.com/
@@ -10,7 +10,7 @@
 --   macOS/Linux have not been validated. See README.md for workflow limits.
 --   Proprietary: supplied for use with RELAYER only; see LICENSE.md.
 -- @changelog
---   Prepare waveform peaks before inserting exported variations.
+--   Prepare waveform peaks and retain prepared sources in imported items.
 --   Keep preparation cancellable with visible progress.
 --   Includes the clearer export setup and rendering UI.
 -- @provides

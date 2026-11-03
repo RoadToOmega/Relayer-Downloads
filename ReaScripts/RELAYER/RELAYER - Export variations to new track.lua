@@ -58,7 +58,7 @@ local function update()
     files=files or export.result(job,id,options.count)
     if files and not peaks then peaks=export.peakBuilder(files) end
     if peaks and peaks:step() then
-      export.import(project,files,position,options.gap)
+      export.import(project,files,position,options.gap,peaks.sources)
       finished=true;if peaks then peaks:close() end;gfx.quit();return
     end
     gfx.set(0.08,0.10,0.12);gfx.rect(0,0,gfx.w,gfx.h,1)

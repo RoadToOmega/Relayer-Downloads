@@ -65,7 +65,7 @@ function M.result(directory,id,count)
   end
   return files
 end
-function M.import(project,files,position,gap)
+function M.import(project,files,position,gap,prepared)
   assert(reaper.EnumProjects(-1,'')==project,'Return to the original project before importing')
   assert(reaper.GetPlayStateEx(project)==0,'Stop transport before importing')
   local track
@@ -81,7 +81,8 @@ function M.import(project,files,position,gap)
     reaper.SetMediaTrackInfo_Value(track,'I_SOLO',0)
     reaper.SetMediaTrackInfo_Value(track,'I_RECARM',0)
     for i,file in ipairs(files) do
-      local source=assert(reaper.PCM_Source_CreateFromFile(file.path),'Cannot open rendered WAV')
+      local source=assert((prepared and prepared[i]) or reaper.PCM_Source_CreateFromFile(file.path),'Cannot open rendered WAV')
+      if prepared then prepared[i]=nil end
       local item=reaper.AddMediaItemToTrack(track)
       if not item then reaper.PCM_Source_Destroy(source);error('Cannot create audio item') end
       local take=reaper.AddTakeToMediaItem(item)
@@ -169,8 +170,9 @@ end
 -- Build cached waveforms before inserting items. Own these temporary sources so
 -- project edits/Undo cannot invalidate a pointer between deferred callbacks.
 function M.peakBuilder(files)
-  local b={index=1,source=nil,building=false}
+  local b={index=1,source=nil,building=false,sources={}}
   function b:close()
+    for i,source in pairs(self.sources) do reaper.PCM_Source_Destroy(source);self.sources[i]=nil end
     if self.source then
       if self.building then reaper.PCM_Source_BuildPeaks(self.source,2) end
       reaper.PCM_Source_Destroy(self.source);self.source=nil;self.building=false
@@ -184,7 +186,9 @@ function M.peakBuilder(files)
       if self.building then return false end
     end
     if not self.building or reaper.PCM_Source_BuildPeaks(self.source,1)==0 then
-      self:close();self.index=self.index+1
+      if self.building then reaper.PCM_Source_BuildPeaks(self.source,2) end
+      self.sources[self.index]=self.source;self.source=nil;self.building=false
+      self.index=self.index+1
     end
     return self.index>#files
   end
