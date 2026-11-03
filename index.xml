@@ -45,6 +45,23 @@ Use Load selected WAV into active layer instead.]]></changelog>
         <source file="MEDIA-EXPLORER.md">https://raw.githubusercontent.com/RoadToOmega/Relayer-Downloads/02de752baf59ab66af4c9698e5faa7a080cc16c1/ReaScripts/RELAYER/MEDIA-EXPLORER.md</source>
         <source file="LICENSE.md">https://raw.githubusercontent.com/RoadToOmega/Relayer-Downloads/02de752baf59ab66af4c9698e5faa7a080cc16c1/ReaScripts/RELAYER/LICENSE.md</source>
       </version>
+      <version name="0.6.0" author="Bight Audio" time="2026-11-03T03:45:55Z">
+        <changelog><![CDATA[Select databases by name, with progress, cancellation and import results.
+Handle invisible metadata characters found in large Boom databases.]]></changelog>
+        <source main="main" file="RELAYER - Load selected WAVs into layers.lua">https://raw.githubusercontent.com/RoadToOmega/Relayer-Downloads/b02ca08dc8f10e5088805e462709214d675d409f/ReaScripts/RELAYER/RELAYER%20-%20Load%20selected%20WAVs%20into%20layers.lua</source>
+        <source main="main" file="RELAYER - Load selected WAV into active layer.lua">https://raw.githubusercontent.com/RoadToOmega/Relayer-Downloads/b02ca08dc8f10e5088805e462709214d675d409f/ReaScripts/RELAYER/RELAYER%20-%20Load%20selected%20WAV%20into%20active%20layer.lua</source>
+        <source main="main" file="RELAYER - Export variations to new track.lua">https://raw.githubusercontent.com/RoadToOmega/Relayer-Downloads/b02ca08dc8f10e5088805e462709214d675d409f/ReaScripts/RELAYER/RELAYER%20-%20Export%20variations%20to%20new%20track.lua</source>
+        <source main="main" file="RELAYER - Import Media Explorer databases.lua">https://raw.githubusercontent.com/RoadToOmega/Relayer-Downloads/b02ca08dc8f10e5088805e462709214d675d409f/ReaScripts/RELAYER/RELAYER%20-%20Import%20Media%20Explorer%20databases.lua</source>
+        <source file="RelayerBridge.lua">https://raw.githubusercontent.com/RoadToOmega/Relayer-Downloads/b02ca08dc8f10e5088805e462709214d675d409f/ReaScripts/RELAYER/RelayerBridge.lua</source>
+        <source file="RelayerLoadAction.lua">https://raw.githubusercontent.com/RoadToOmega/Relayer-Downloads/b02ca08dc8f10e5088805e462709214d675d409f/ReaScripts/RELAYER/RelayerLoadAction.lua</source>
+        <source file="RelayerExport.lua">https://raw.githubusercontent.com/RoadToOmega/Relayer-Downloads/b02ca08dc8f10e5088805e462709214d675d409f/ReaScripts/RELAYER/RelayerExport.lua</source>
+        <source file="RelayerMediaDatabase.lua">https://raw.githubusercontent.com/RoadToOmega/Relayer-Downloads/b02ca08dc8f10e5088805e462709214d675d409f/ReaScripts/RELAYER/RelayerMediaDatabase.lua</source>
+        <source file="RelayerDatabaseImportUI.lua">https://raw.githubusercontent.com/RoadToOmega/Relayer-Downloads/b02ca08dc8f10e5088805e462709214d675d409f/ReaScripts/RELAYER/RelayerDatabaseImportUI.lua</source>
+        <source file="README.md">https://raw.githubusercontent.com/RoadToOmega/Relayer-Downloads/b02ca08dc8f10e5088805e462709214d675d409f/ReaScripts/RELAYER/README.md</source>
+        <source file="EXPORT.md">https://raw.githubusercontent.com/RoadToOmega/Relayer-Downloads/b02ca08dc8f10e5088805e462709214d675d409f/ReaScripts/RELAYER/EXPORT.md</source>
+        <source file="MEDIA-EXPLORER.md">https://raw.githubusercontent.com/RoadToOmega/Relayer-Downloads/b02ca08dc8f10e5088805e462709214d675d409f/ReaScripts/RELAYER/MEDIA-EXPLORER.md</source>
+        <source file="LICENSE.md">https://raw.githubusercontent.com/RoadToOmega/Relayer-Downloads/b02ca08dc8f10e5088805e462709214d675d409f/ReaScripts/RELAYER/LICENSE.md</source>
+      </version>
     </reapack>
   </category>
 </index>
