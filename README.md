@@ -53,3 +53,25 @@ Checks verify file type, size and checksums and preserve the other platform. The
 
 On Mac, pull the latest repository and double-click Scripts/Upload-Mac-Installer.command. If needed, make that launcher executable with chmod +x Scripts/Upload-Mac-Installer.command. Both platforms must use this updated uploader for schema-3 releases. Old published schema-2 releases are read automatically; unfinished old drafts should use a new release tag.
 
+
+## Install RELAYER companion scripts with ReaPack
+
+Install RELAYER separately, then in REAPER choose **Extensions > ReaPack > Import repositories** and paste:
+
+https://raw.githubusercontent.com/RoadToOmega/Relayer-Downloads/main/index.xml
+
+Choose **Browse packages**, search for **RELAYER Companion Scripts**, install and apply. All five actions and four supporting modules install together. Supporting modules do not appear in the Action List. Use **Synchronize packages** to obtain later updates.
+
+Scripts are proprietary and supplied for use with RELAYER only. See [the script licence](ReaScripts/RELAYER/LICENSE.txt) and [usage/compatibility notes](ReaScripts/RELAYER/README.md). Windows REAPER 7.55 and RELAYER 0.8.78 VST3 were tested; other platforms remain unvalidated.
+
+If migrating from a manually extracted ZIP, ReaPack installs into its own managed directory. Reassign existing shortcuts/toolbars to the ReaPack-installed actions before removing old registrations. Future ReaPack updates retain these managed filenames. Do not overwrite ReaPack-managed files with ZIP contents.
+
+## Release companion updates
+
+1. Copy an approved helper bundle into `ReaScripts/RELAYER`, retaining the package descriptor and LICENSE.txt. Keep every Lua file together.
+2. Increment `@version` in `RELAYER Companion Scripts.lua` and add release notes. Helper versions are separate from plugin versions; never overwrite a published version.
+3. Commit and push. The **ReaPack** workflow checks Lua syntax and package metadata and uploads a candidate index artifact.
+4. Test the candidate with ReaPack in a disposable REAPER configuration, including fresh install, update and removal.
+5. Run the **ReaPack** workflow manually on `main` with **publish** enabled. This updates only `index.xml`. It does not create a GitHub Release, publish an installer or change the website's latest-installer links.
+
+Index downloads point to immutable source commits. Keep historical index entries and those commits available so earlier package versions remain downloadable. Do not amend existing versions. The workflow uses the official reapack-index 1.2.6 tool.

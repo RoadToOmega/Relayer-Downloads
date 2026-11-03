@@ -1,0 +1,28 @@
+-- @description RELAYER Companion Scripts
+-- @version 0.5.1
+-- @author Bight Audio
+-- @metapackage
+-- @link Website https://www.bightaudio.com/
+-- @about
+--   Companion actions for the separately installed RELAYER plugin.
+--   Tested with RELAYER 0.8.78 VST3 and REAPER 7.55/x64 on Windows.
+--   Later builds must retain compatible state and command protocols.
+--   macOS/Linux have not been validated. See README.md for workflow limits.
+--   Proprietary: supplied for use with RELAYER only; see LICENSE.txt.
+-- @changelog
+--   Initial ReaPack release of the verified 0.5.1 helper bundle.
+--   Includes improved Library instructions and import timeout feedback.
+-- @provides
+--   [main] RELAYER - Load selected WAVs into layers.lua
+--   [main] RELAYER - Load selected WAV into active layer.lua
+--   [main] RELAYER - Load selected WAV into layer 1.lua
+--   [main] RELAYER - Export variations to new track.lua
+--   [main] RELAYER - Import Media Explorer databases.lua
+--   [nomain] RelayerBridge.lua
+--   [nomain] RelayerLoadAction.lua
+--   [nomain] RelayerExport.lua
+--   [nomain] RelayerMediaDatabase.lua
+--   README.md
+--   EXPORT.md
+--   MEDIA-EXPLORER.md
+--   LICENSE.txt

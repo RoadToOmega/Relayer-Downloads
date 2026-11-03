@@ -1,0 +1,59 @@
+name: ReaPack
+on:
+  push:
+    branches: [main]
+    paths: ['ReaScripts/**', '.reapack-index.conf', '.github/workflows/reapack.yml']
+  pull_request:
+    paths: ['ReaScripts/**', '.reapack-index.conf', '.github/workflows/reapack.yml']
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the validated package to index.xml
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: reapack-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install indexer and Lua
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ruby-dev libssl-dev cmake pkg-config lua5.4
+          sudo gem install reapack-index -v 1.2.6 --no-document
+      - name: Check Lua syntax and package metadata
+        run: |
+          find ReaScripts/RELAYER -name '*.lua' -print0 | xargs -0 -n1 luac -p
+          reapack-index --check
+      - name: Build candidate index
+        run: reapack-index --scan 'ReaScripts/RELAYER/RELAYER Companion Scripts.lua'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reapack-index
+          path: index.xml
+  publish:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main'
+    needs: validate
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: reapack-index
+      - name: Publish index only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.xml
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Update ReaPack index'
+          git push origin HEAD:main
