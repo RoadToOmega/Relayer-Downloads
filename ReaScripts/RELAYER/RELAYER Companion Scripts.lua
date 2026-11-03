@@ -1,5 +1,5 @@
 -- @description RELAYER Companion Scripts
--- @version 0.6.1
+-- @version 0.6.2
 -- @author Bight Audio
 -- @metapackage
 -- @link Website https://www.bightaudio.com/
@@ -10,8 +10,9 @@
 --   macOS/Linux have not been validated. See README.md for workflow limits.
 --   Proprietary: supplied for use with RELAYER only; see LICENSE.md.
 -- @changelog
---   Clearer export setup, inline validation and live timeline summary.
---   Improved rendering status and bounded Cancel button.
+--   Prepare waveform peaks before inserting exported variations.
+--   Keep preparation cancellable with visible progress.
+--   Includes the clearer export setup and rendering UI.
 -- @provides
 --   [main] RELAYER - Load selected WAVs into layers.lua
 --   [main] RELAYER - Load selected WAV into active layer.lua

@@ -24,6 +24,7 @@ local function send(action)
     'REAPER could not deliver the export command')
 end
 local started,finished=false,false
+local files,peaks
 local ok,err=pcall(function()
   project,filename=reaper.EnumProjects(-1,'')
   assert(filename~='','Save the REAPER project first so rendered audio has a permanent project folder')
@@ -42,6 +43,7 @@ if not started then return end
 local began=reaper.time_precise()
 gfx.init('RELAYER - Rendering variations',560,180)
 reaper.atexit(function()
+  if peaks then peaks:close() end
   gfx.quit()
   if not finished then pcall(send,'cancel') end
 end)
@@ -49,25 +51,26 @@ local function update()
   local success,message=pcall(function()
     local key=gfx.getchar()
     if key<0 or key==27 or (gfx.mouse_cap&1~=0 and gfx.mouse_x>=16 and gfx.mouse_x<=146 and gfx.mouse_y>=125 and gfx.mouse_y<=157) then
-      pcall(send,'cancel');finished=true;gfx.quit();return
+      pcall(send,'cancel');finished=true;if peaks then peaks:close() end;gfx.quit();return
     end
     assert(reaper.EnumProjects(-1,'')==project and sourceExists(),'Source project/instance changed; no items imported. Completed WAVs remain in:\n'..job)
     assert(reaper.time_precise()-began<1800,'Export timed out; check RELAYER licensing, sample loading and disk space')
-    local files=export.result(job,id,options.count)
-    if files then
+    files=files or export.result(job,id,options.count)
+    if files and not peaks then peaks=export.peakBuilder(files) end
+    if peaks and peaks:step() then
       export.import(project,files,position,options.gap)
-      finished=true;gfx.quit();return
+      finished=true;if peaks then peaks:close() end;gfx.quit();return
     end
     gfx.set(0.08,0.10,0.12);gfx.rect(0,0,gfx.w,gfx.h,1)
     gfx.setfont(1,'Arial',20);gfx.set(0.8,0.9,0.93);gfx.x=16;gfx.y=20
-    gfx.drawstr(('Rendering %d variations...  %.0f s'):format(options.count,reaper.time_precise()-began))
+    gfx.drawstr(peaks and ('Preparing waveforms: %d / %d'):format(math.min(peaks.index,options.count),options.count) or ('Rendering %d variations...  %.0f s'):format(options.count,reaper.time_precise()-began))
     gfx.setfont(1,'Arial',14);gfx.x=16;gfx.y=60;gfx.drawstr('Current patch + RELAYER output FX. Keep this project open.')
     gfx.x=16;gfx.y=88;gfx.drawstr('Completed files will appear together on a new track.')
     gfx.set(.18,.21,.23);gfx.rect(16,125,130,32,1)
     gfx.set(.9,.92,.94);gfx.x=28;gfx.y=133;gfx.drawstr('Cancel (Esc)');gfx.update()
   end)
   if not success then
-    pcall(send,'cancel');finished=true;gfx.quit()
+    pcall(send,'cancel');finished=true;if peaks then peaks:close() end;gfx.quit()
     reaper.MB(tostring(message)..'\n\nAny completed WAVs are kept in:\n'..job,'RELAYER export',0)
   elseif not finished then reaper.defer(update) end
 end

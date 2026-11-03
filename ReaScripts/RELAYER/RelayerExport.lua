@@ -166,4 +166,29 @@ function M.showSetup(done)
   frame()
 end
 
+-- Build cached waveforms before inserting items. Own these temporary sources so
+-- project edits/Undo cannot invalidate a pointer between deferred callbacks.
+function M.peakBuilder(files)
+  local b={index=1,source=nil,building=false}
+  function b:close()
+    if self.source then
+      if self.building then reaper.PCM_Source_BuildPeaks(self.source,2) end
+      reaper.PCM_Source_Destroy(self.source);self.source=nil;self.building=false
+    end
+  end
+  function b:step()
+    if self.index>#files then return true end
+    if not self.source then
+      self.source=assert(reaper.PCM_Source_CreateFromFile(files[self.index].path),'Cannot open WAV for waveform preparation')
+      self.building=reaper.PCM_Source_BuildPeaks(self.source,0)~=0
+      if self.building then return false end
+    end
+    if not self.building or reaper.PCM_Source_BuildPeaks(self.source,1)==0 then
+      self:close();self.index=self.index+1
+    end
+    return self.index>#files
+  end
+  return b
+end
+
 return M
